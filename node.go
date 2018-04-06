@@ -1,11 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"sort"
 )
 
@@ -33,7 +29,20 @@ func initializeNodes(frequency []uint16) (arrayNodes []Node) {
 	return arrayNodes
 }
 
-func generateHuffmanTree(arrayNodes []Node) (tree Node) {
+func huffmanTree(frequency []uint16) (root Node) {
+	arrayNodes := initializeNodes(frequency)
+	sort.Slice(arrayNodes, func(i, j int) bool {
+		if arrayNodes[i].Freq == arrayNodes[j].Freq {
+			return arrayNodes[i].Letter < arrayNodes[j].Letter
+		} else {
+			return arrayNodes[i].Freq < arrayNodes[j].Freq
+		}
+	})
+	root = generateNewRoot(arrayNodes)
+	return root
+}
+
+func generateNewRoot(arrayNodes []Node) (tree Node) {
 	var n Node
 	for len(arrayNodes) > 1 {
 		n = createNode(&arrayNodes[0], &arrayNodes[1])
@@ -55,66 +64,6 @@ func createNode(n1 *Node, n2 *Node) (n Node) {
 	return n
 }
 
-func createEncodeString(data []byte, codes map[uint16]string) (compressed string) {
-	for _, vl := range data {
-		compressed += codes[uint16(vl)]
-	}
-	return compressed
-}
-
-func createEncodedFile(fileName string, compress string, frequency []uint16) {
-	var bt2 uint8
-	var bitsBuffer = 0
-
-	out, err := os.Create(fileName)
-	if err != nil {
-		fmt.Printf("error creating file: %v", err)
-		return
-	}
-	defer out.Close()
-
-	bytesCreated := 0
-	lastBits := len(compress) % 8
-
-	var bytesToWrite []byte
-
-	buf := new(bytes.Buffer)
-	for _, vl := range frequency {
-		err := binary.Write(buf, binary.LittleEndian, uint16(vl))
-		if err != nil {
-			fmt.Println("binary.Write failed:", err)
-		}
-	}
-	bytesToWrite = buf.Bytes()
-
-	for _, vl := range compress {
-		if vl == '0' {
-			bt2 = bt2 << 1
-		}
-		if vl == '1' {
-			bt2 = bt2<<1 + 1
-		}
-		bitsBuffer++
-		if bitsBuffer == 8 {
-			bytesCreated++
-			bytesToWrite = append(bytesToWrite, bt2)
-			bitsBuffer = 0
-			bt2 = 0
-		}
-	}
-	for i := 0; i < (8 - lastBits); i++ {
-		bt2 = bt2 << 1
-	}
-	bytesCreated++
-	bytesToWrite = append(bytesToWrite, bt2)
-
-	err = ioutil.WriteFile(fileName, bytesToWrite, 0644)
-	if err != nil {
-		panic(err)
-	}
-
-}
-
 func generateCodes(tree Node, cds map[uint16]string) {
 
 	var walkTree func(n *Node, code string, cds map[uint16]string)
@@ -133,22 +82,6 @@ func generateCodes(tree Node, cds map[uint16]string) {
 	}
 	var code string
 	walkTree(&tree, code, cds)
-}
-
-func huffmanTree(frequency []uint16) (root Node) {
-
-	arrayNodes := initializeNodes(frequency)
-
-	sort.Slice(arrayNodes, func(i, j int) bool {
-		if arrayNodes[i].Freq == arrayNodes[j].Freq {
-			return arrayNodes[i].Letter < arrayNodes[j].Letter
-		} else {
-			return arrayNodes[i].Freq < arrayNodes[j].Freq
-		}
-	})
-
-	root = generateHuffmanTree(arrayNodes)
-	return root
 }
 
 func showPreOrder(tree *Node) {
@@ -172,4 +105,14 @@ func showPreOrder(tree *Node) {
 	}
 	preOrder(tree.Esq)
 	preOrder(tree.Dir)
+}
+
+func countRemainingLeafs(frequency []uint16) (count int) {
+	count = 0
+	for _, vl := range frequency {
+		if vl > 0 {
+			count++
+		}
+	}
+	return count
 }

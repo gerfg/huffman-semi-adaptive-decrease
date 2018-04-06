@@ -5,20 +5,24 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
+	"time"
 )
 
 func decodeFile(fileName string) {
+	start := time.Now()
 	fmt.Println("\n --\t  Decoding started.\n")
 	frequency, data := getDecodeData(fileName)
 	dcd := dataToString(data)
 	root := huffmanTree(frequency)
-	decodeStringAndCreateFile(dcd, root)
+	decodeStringAndCreateFile(fileName, dcd, root, frequency)
+	allTime := time.Since(start)
+	fmt.Printf("Time to Decode: %s\n", allTime)
 }
 
-func decodeStringAndCreateFile(dcd string, root Node) {
+func decodeStringAndCreateFile(fileName string, dcd string, root Node, frequency []uint16) {
 	var bytesToWrite []byte
 	var nodeSearch Node = root
-	for len(dcd) > 2 {
+	for len(dcd) > 1 {
 		if nodeSearch.Letter == uint16(257) {
 			if dcd[0] == '0' {
 				if nodeSearch.Esq != nil {
@@ -33,11 +37,18 @@ func decodeStringAndCreateFile(dcd string, root Node) {
 			}
 		} else {
 			bytesToWrite = append(bytesToWrite, byte(nodeSearch.Letter))
-			nodeSearch = root
+			frequency[nodeSearch.Letter]--
+			if countRemainingLeafs(frequency) > 0 {
+				root = huffmanTree(frequency)
+				nodeSearch = root
+			} else {
+				break
+			}
 		}
 	}
-	ioutil.WriteFile("output/uncompressed.bin", bytesToWrite, 0644)
-	fmt.Println("| File Uncompressed, File Location: output/uncompressed.bin |\n\n")
+	fileName = fileName[:(len(fileName) - 6)]
+	ioutil.WriteFile(fileName+".umcmp", bytesToWrite, 0644)
+	fmt.Println("| File Uncompressed, File Location: " + fileName + ".uncmp |\n\n")
 }
 
 func getDecodeData(fileName string) (frequency []uint16, data []byte) {
