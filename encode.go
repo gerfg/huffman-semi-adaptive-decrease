@@ -6,11 +6,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 func encodeFile(fileName string) {
 	start := time.Now()
+
+	var extension = filepath.Ext(fileName)
+	f, err := os.Create("log/" + fileName[10:len(fileName)-len(extension)] + ".txt")
+	checkError(err)
+	f.Close()
 
 	frequency, size, data := getFrequencySlice(fileName)
 	backupFrequency := make([]uint16, len(frequency))
@@ -24,10 +30,38 @@ func encodeFile(fileName string) {
 
 	compr := createEncodeString(data, cds, frequency)
 
-	createEncodedFile(fileName+".compr", compr, backupFrequency)
-	fmt.Println("| File Compressed, File Location: " + fileName + ".compr |")
+	createEncodedFile("encoded/"+fileName[10:], compr, backupFrequency)
+	fmt.Println("| File Compressed, File Location: encoded/" + fileName + " |")
 	allTime := time.Since(start)
 	fmt.Printf("\nTime to Encode: %s\n", allTime)
+}
+
+func getFrequencySlice(fileName string) (frequency []uint16, size int, data []byte) {
+	data, _, size = ReadFile(fileName)
+
+	var extension = filepath.Ext(fileName)
+	log, err := os.OpenFile("log/"+fileName[10:len(fileName)-len(extension)]+".txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	checkError(err)
+	defer log.Close()
+
+	defer log.Close()
+
+	frequency = make([]uint16, 256)
+	for i := range frequency {
+		frequency[i] = 0
+	}
+
+	for _, vl := range data {
+		frequency[vl]++
+	}
+	fmt.Fprintln(log, " -- Encode --\n")
+	fmt.Fprintln(log, " >Frequency\n")
+	for idx, vl := range frequency {
+		if vl > 0 {
+			fmt.Fprintf(log, "%d -> %s - %d\n", idx, string(idx), vl)
+		}
+	}
+	return frequency, size, data
 }
 
 func createEncodeString(data []byte, codes map[uint16]string, frequency []uint16) (compressed string) {

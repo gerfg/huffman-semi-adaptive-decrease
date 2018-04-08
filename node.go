@@ -116,3 +116,9 @@ func countRemainingLeafs(frequency []uint16) (count int) {
 	}
 	return count
 }
+
+func checkError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

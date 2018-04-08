@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -46,16 +48,22 @@ func decodeStringAndCreateFile(fileName string, dcd string, root Node, frequency
 			}
 		}
 	}
-	fileName = fileName[:(len(fileName) - 6)]
-	ioutil.WriteFile(fileName+".umcmp", bytesToWrite, 0644)
-	fmt.Println("| File Uncompressed, File Location: " + fileName + ".uncmp |\n\n")
+
+	ioutil.WriteFile("decoded/"+fileName[8:], bytesToWrite, 0644)
+	fmt.Println("| File Uncompressed, File Location: decoded/" + fileName[8:] + " |\n\n")
 }
 
 func getDecodeData(fileName string) (frequency []uint16, data []byte) {
-	data, err, _ := ReadFile(fileName)
-	if err != nil {
-		panic(err)
-	}
+	data, er, _ := ReadFile(fileName)
+	checkError(er)
+
+	var extension = filepath.Ext(fileName)
+	log, err := os.OpenFile("log/"+fileName[8:len(fileName)-len(extension)]+".txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	checkError(err)
+	defer log.Close()
+
+	fmt.Fprintf(log, "\n -- Decode --\n\n")
+	fmt.Fprintf(log, "\n >Frequency\n")
 
 	frequency = make([]uint16, 256)
 
@@ -64,6 +72,13 @@ func getDecodeData(fileName string) (frequency []uint16, data []byte) {
 
 	bff := bytes.NewReader(dataFrequency)
 	binary.Read(bff, binary.LittleEndian, &frequency)
+
+	for idx, vl := range frequency {
+		if vl > 0 {
+			fmt.Fprintf(log, "%d -> %s - %d\n", idx, string(idx), vl)
+		}
+	}
+
 	return frequency, data
 }
 

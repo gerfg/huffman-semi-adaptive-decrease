@@ -12,16 +12,3 @@ func ReadFile(fileName string) (data []byte, err error, size int) {
 	}
 	return data, err, len(data)
 }
-
-func getFrequencySlice(fileName string) (frequency []uint16, size int, data []byte) {
-	frequency = make([]uint16, 256)
-	for i := range frequency {
-		frequency[i] = 0
-	}
-
-	data, _, size = ReadFile(fileName)
-	for _, vl := range data {
-		frequency[vl]++
-	}
-	return frequency, size, data
-}
