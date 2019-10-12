@@ -1,23 +1,38 @@
 # huffman-semi-adaptive-decrease
 
-go build -o huffman
+1. Build the execution file
+```shell
+$ go build -o huffman
+```
 
-./huffman [-c or -u] [file]
+2. Execute with the instance following the flags to compress or uncompress
 
--c -> compress the file
--u -> uncompress the file
-file -> the file path
+```shell
+$ ./huffman [targeting] [file]
+```
+#### file
 
-example:
+* **file**: Path to the file
 
-./huffman -c instances/t1.bin
+##### targeting
+
+* **-c**: compress the file
+* **-u**: uncompress the file
+
+---
+
+##### example:
+
+```shell
+$ ./huffman -c instances/t1.bin
 
 --	  Encoding started
 
 | File Compressed, File Location: instances/t1.bin.compr |
 
-./huffman -u instances/t1.bin.compr
+$ ./huffman -u instances/t1.bin.compr
 
  --	  Decoding started.
 
 | File Uncompressed, File Location: instances/t1.bin.uncmp |
+```
