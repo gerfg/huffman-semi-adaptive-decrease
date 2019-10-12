@@ -1,4 +1,9 @@
-# huffman-semi-adaptive-decrease
+# Huffman semi Adaptive Decrease
+
+Implementation of the semi adaptive decrement huffman algorithm using Golang.
+Unlike traditional huffman, the semi-adaptive decrement huffman decrements its frequency list by each compressed byte to its byte. Modifying your huffman tree each time a user-defined value is reached for reframing.
+
+### Usage
 
 1. Build the execution file
 ```shell
@@ -10,7 +15,7 @@ $ go build -o huffman
 ```shell
 $ ./huffman [targeting] [file]
 ```
-#### file
+##### file
 
 * **file**: Path to the file
 
@@ -21,7 +26,7 @@ $ ./huffman [targeting] [file]
 
 ---
 
-##### example:
+#### example:
 
 ```shell
 $ ./huffman -c instances/t1.bin
